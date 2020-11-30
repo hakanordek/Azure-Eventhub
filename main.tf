@@ -41,6 +41,7 @@ module "deploy_pip" {
     allocation_method                   = "Static"
 }
 
+# Create Load Balancer
 module "deploy_lb" {
     source                              = "./modules/lb"
     name                                = "${var.project_prefix}-lb"
@@ -50,3 +51,18 @@ module "deploy_lb" {
     public_ip_address_id                = module.deploy_pip.id 
 }
 
+# Create namespace, eventhub,rules and import log categories
+module "deploy_eventhub" {
+    source                              = "./modules/eventhub"   
+    eventhub_ns_name                    = "${var.project_prefix}-ns"    
+    location                            = var.location            
+    resource_group_name                 = module.deploy_resource_group.name         
+    ns_sku                              = "standard"      
+    eventhub_rule_name                  = "${var.project_prefix}-rule0"       
+    eventhub_name                       = "${var.project_prefix}-hub"        
+    diag_name                           = "load-balancer-events"       
+    target_resource_id                  = module.deploy_lb.id 
+    Tags                                = {
+        Environment                    = "Dev"
+    }       
+}
